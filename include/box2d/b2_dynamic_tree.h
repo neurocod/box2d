@@ -252,16 +252,12 @@ inline void b2DynamicTree::RayCast(T* callback, const b2RayCastInput& input) con
 	{
 		int32 nodeId = stack.Pop();
 		if (nodeId == b2_nullNode)
-		{
 			continue;
-		}
 
 		const b2TreeNode* node = m_nodes + nodeId;
 
 		if (b2TestOverlap(node->aabb, segmentAABB) == false)
-		{
 			continue;
-		}
 
 		// Separating axis for segment (Gino, p80).
 		// |dot(v, p1 - c)| > dot(|v|, h)

@@ -55,15 +55,29 @@
 // User data
 
 /// You can define this to inject whatever data you want in b2Body
+class IActor;
 struct B2_API b2BodyUserData
 {
-	b2BodyUserData()
-	{
-		pointer = 0;
+	b2BodyUserData() {
 	}
 
 	/// For legacy compatibility
-	uintptr_t pointer;
+	void* pointer = 0;
+	enum class Type {
+		None,
+		Actor
+	} type = Type::None;
+	void set(IActor*t) {
+		type = Type::Actor;
+		pointer = t;
+	}
+	template<class PT>
+	PT dynamicCast()const {
+		if (type != Type::Actor)
+			return 0;
+		IActor* act = reinterpret_cast<IActor*>(pointer);
+		return dynamic_cast<PT>(act);
+	}
 };
 
 /// You can define this to inject whatever data you want in b2Fixture

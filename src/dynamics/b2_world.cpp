@@ -1,3 +1,4 @@
+#include "pch.h"
 // MIT License
 
 // Copyright (c) 2019 Erin Catto
@@ -116,9 +117,7 @@ b2Body* b2World::CreateBody(const b2BodyDef* def)
 {
 	b2Assert(IsLocked() == false);
 	if (IsLocked())
-	{
 		return nullptr;
-	}
 
 	void* mem = m_blockAllocator.Allocate(sizeof(b2Body));
 	b2Body* b = new (mem) b2Body(def, this);
@@ -127,9 +126,8 @@ b2Body* b2World::CreateBody(const b2BodyDef* def)
 	b->m_prev = nullptr;
 	b->m_next = m_bodyList;
 	if (m_bodyList)
-	{
 		m_bodyList->m_prev = b;
-	}
+	
 	m_bodyList = b;
 	++m_bodyCount;
 
@@ -146,16 +144,13 @@ void b2World::DestroyBody(b2Body* b)
 	}
 
 	// Delete the attached joints.
-	b2JointEdge* je = b->m_jointList;
-	while (je)
+	for (b2JointEdge* je = b->m_jointList; je; )
 	{
 		b2JointEdge* je0 = je;
 		je = je->next;
 
 		if (m_destructionListener)
-		{
 			m_destructionListener->SayGoodbye(je0->joint);
-		}
 
 		DestroyJoint(je0->joint);
 
@@ -164,8 +159,7 @@ void b2World::DestroyBody(b2Body* b)
 	b->m_jointList = nullptr;
 
 	// Delete the attached contacts.
-	b2ContactEdge* ce = b->m_contactList;
-	while (ce)
+	for (b2ContactEdge* ce = b->m_contactList; ce; )
 	{
 		b2ContactEdge* ce0 = ce;
 		ce = ce->next;
@@ -174,8 +168,7 @@ void b2World::DestroyBody(b2Body* b)
 	b->m_contactList = nullptr;
 
 	// Delete the attached fixtures. This destroys broad-phase proxies.
-	b2Fixture* f = b->m_fixtureList;
-	while (f)
+	for (b2Fixture* f = b->m_fixtureList; f; )
 	{
 		b2Fixture* f0 = f;
 		f = f->m_next;
@@ -198,19 +191,13 @@ void b2World::DestroyBody(b2Body* b)
 
 	// Remove world body list.
 	if (b->m_prev)
-	{
 		b->m_prev->m_next = b->m_next;
-	}
 
 	if (b->m_next)
-	{
 		b->m_next->m_prev = b->m_prev;
-	}
 
 	if (b == m_bodyList)
-	{
 		m_bodyList = b->m_next;
-	}
 
 	--m_bodyCount;
 	b->~b2Body();
@@ -221,9 +208,7 @@ b2Joint* b2World::CreateJoint(const b2JointDef* def)
 {
 	b2Assert(IsLocked() == false);
 	if (IsLocked())
-	{
 		return nullptr;
-	}
 
 	b2Joint* j = b2Joint::Create(def, &m_blockAllocator);
 
@@ -258,8 +243,7 @@ b2Joint* b2World::CreateJoint(const b2JointDef* def)
 	// If the joint prevents collisions, then flag any contacts for filtering.
 	if (def->collideConnected == false)
 	{
-		b2ContactEdge* edge = bodyB->GetContactList();
-		while (edge)
+		for(b2ContactEdge* edge = bodyB->GetContactList(); edge; )
 		{
 			if (edge->other == bodyA)
 			{
@@ -281,27 +265,19 @@ void b2World::DestroyJoint(b2Joint* j)
 {
 	b2Assert(IsLocked() == false);
 	if (IsLocked())
-	{
 		return;
-	}
 
 	bool collideConnected = j->m_collideConnected;
 
 	// Remove from the doubly linked list.
 	if (j->m_prev)
-	{
 		j->m_prev->m_next = j->m_next;
-	}
 
 	if (j->m_next)
-	{
 		j->m_next->m_prev = j->m_prev;
-	}
 
 	if (j == m_jointList)
-	{
 		m_jointList = j->m_next;
-	}
 
 	// Disconnect from island graph.
 	b2Body* bodyA = j->m_bodyA;
@@ -318,33 +294,23 @@ void b2World::DestroyJoint(b2Joint* j)
 	}
 
 	if (j->m_edgeA.next)
-	{
 		j->m_edgeA.next->prev = j->m_edgeA.prev;
-	}
 
 	if (&j->m_edgeA == bodyA->m_jointList)
-	{
 		bodyA->m_jointList = j->m_edgeA.next;
-	}
 
 	j->m_edgeA.prev = nullptr;
 	j->m_edgeA.next = nullptr;
 
 	// Remove from body 2
 	if (j->m_edgeB.prev)
-	{
 		j->m_edgeB.prev->next = j->m_edgeB.next;
-	}
 
 	if (j->m_edgeB.next)
-	{
 		j->m_edgeB.next->prev = j->m_edgeB.prev;
-	}
 
 	if (&j->m_edgeB == bodyB->m_jointList)
-	{
 		bodyB->m_jointList = j->m_edgeB.next;
-	}
 
 	j->m_edgeB.prev = nullptr;
 	j->m_edgeB.next = nullptr;
@@ -357,8 +323,7 @@ void b2World::DestroyJoint(b2Joint* j)
 	// If the joint prevents collisions, then flag any contacts for filtering.
 	if (collideConnected == false)
 	{
-		b2ContactEdge* edge = bodyB->GetContactList();
-		while (edge)
+		for (b2ContactEdge* edge = bodyB->GetContactList(); edge; edge = edge->next)
 		{
 			if (edge->other == bodyA)
 			{
@@ -366,8 +331,6 @@ void b2World::DestroyJoint(b2Joint* j)
 				// body is awake).
 				edge->contact->FlagForFiltering();
 			}
-
-			edge = edge->next;
 		}
 	}
 }
@@ -376,17 +339,13 @@ void b2World::DestroyJoint(b2Joint* j)
 void b2World::SetAllowSleeping(bool flag)
 {
 	if (flag == m_allowSleep)
-	{
 		return;
-	}
 
 	m_allowSleep = flag;
 	if (m_allowSleep == false)
 	{
 		for (b2Body* b = m_bodyList; b; b = b->m_next)
-		{
 			b->SetAwake(true);
-		}
 	}
 }
 
@@ -424,20 +383,14 @@ void b2World::Solve(const b2TimeStep& step)
 	for (b2Body* seed = m_bodyList; seed; seed = seed->m_next)
 	{
 		if (seed->m_flags & b2Body::e_islandFlag)
-		{
 			continue;
-		}
 
 		if (seed->IsAwake() == false || seed->IsEnabled() == false)
-		{
 			continue;
-		}
 
 		// The seed can be dynamic or kinematic.
 		if (seed->GetType() == b2_staticBody)
-		{
 			continue;
-		}
 
 		// Reset island and stack.
 		island.Clear();
@@ -470,9 +423,7 @@ void b2World::Solve(const b2TimeStep& step)
 
 				// Has this contact already been added to an island?
 				if (contact->m_flags & b2Contact::e_islandFlag)
-				{
 					continue;
-				}
 
 				// Is this contact solid and touching?
 				if (contact->IsEnabled() == false ||
@@ -496,9 +447,7 @@ void b2World::Solve(const b2TimeStep& step)
 
 				// Was the other body already added to this island?
 				if (other->m_flags & b2Body::e_islandFlag)
-				{
 					continue;
-				}
 
 				b2Assert(stackCount < stackSize);
 				stack[stackCount++] = other;
@@ -509,25 +458,19 @@ void b2World::Solve(const b2TimeStep& step)
 			for (b2JointEdge* je = b->m_jointList; je; je = je->next)
 			{
 				if (je->joint->m_islandFlag == true)
-				{
 					continue;
-				}
 
 				b2Body* other = je->other;
 
 				// Don't simulate joints connected to disabled bodies.
 				if (other->IsEnabled() == false)
-				{
 					continue;
-				}
 
 				island.Add(je->joint);
 				je->joint->m_islandFlag = true;
 
 				if (other->m_flags & b2Body::e_islandFlag)
-				{
 					continue;
-				}
 
 				b2Assert(stackCount < stackSize);
 				stack[stackCount++] = other;
@@ -562,14 +505,10 @@ void b2World::Solve(const b2TimeStep& step)
 		{
 			// If a body was not in an island then it did not move.
 			if ((b->m_flags & b2Body::e_islandFlag) == 0)
-			{
 				continue;
-			}
 
 			if (b->GetType() == b2_staticBody)
-			{
 				continue;
-			}
 
 			// Update fixtures (for broad-phase).
 			b->SynchronizeFixtures();
@@ -614,15 +553,11 @@ void b2World::SolveTOI(const b2TimeStep& step)
 		{
 			// Is this contact disabled?
 			if (c->IsEnabled() == false)
-			{
 				continue;
-			}
 
 			// Prevent excessive sub-stepping.
 			if (c->m_toiCount > b2_maxSubSteps)
-			{
 				continue;
-			}
 
 			float alpha = 1.0f;
 			if (c->m_flags & b2Contact::e_toiFlag)
@@ -662,9 +597,7 @@ void b2World::SolveTOI(const b2TimeStep& step)
 
 				// Are these two non-bullet dynamic bodies?
 				if (collideA == false && collideB == false)
-				{
 					continue;
-				}
 
 				// Compute the TOI for this contact.
 				// Put the sweeps onto the same time interval.
@@ -779,22 +712,16 @@ void b2World::SolveTOI(const b2TimeStep& step)
 				for (b2ContactEdge* ce = body->m_contactList; ce; ce = ce->next)
 				{
 					if (island.m_bodyCount == island.m_bodyCapacity)
-					{
 						break;
-					}
 
 					if (island.m_contactCount == island.m_contactCapacity)
-					{
 						break;
-					}
 
 					b2Contact* contact = ce->contact;
 
 					// Has this contact already been added to the island?
 					if (contact->m_flags & b2Contact::e_islandFlag)
-					{
 						continue;
-					}
 
 					// Only add static, kinematic, or bullet bodies.
 					b2Body* other = ce->other;
@@ -852,9 +779,7 @@ void b2World::SolveTOI(const b2TimeStep& step)
 					other->m_flags |= b2Body::e_islandFlag;
 
 					if (other->m_type != b2_staticBody)
-					{
 						other->SetAwake(true);
-					}
 
 					island.Add(other);
 				}
@@ -877,9 +802,7 @@ void b2World::SolveTOI(const b2TimeStep& step)
 			body->m_flags &= ~b2Body::e_islandFlag;
 
 			if (body->m_type != b2_dynamicBody)
-			{
 				continue;
-			}
 
 			body->SynchronizeFixtures();
 
@@ -961,9 +884,7 @@ void b2World::Step(float dt, int32 velocityIterations, int32 positionIterations)
 	}
 
 	if (m_clearForces)
-	{
 		ClearForces();
-	}
 
 	m_locked = false;
 
@@ -1107,9 +1028,7 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
 void b2World::DebugDraw()
 {
 	if (m_debugDraw == nullptr)
-	{
 		return;
-	}
 
 	uint32 flags = m_debugDraw->GetFlags();
 

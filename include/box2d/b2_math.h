@@ -37,52 +37,57 @@ inline bool b2IsValid(float x)
 #define	b2Sqrt(x)	sqrtf(x)
 #define	b2Atan2(y, x)	atan2f(y, x)
 
+class QPointF;
+class QSizeF;
+
 /// A 2D column vector.
 struct B2_API b2Vec2
 {
-	/// Default constructor does nothing (for performance).
-	b2Vec2() = default;
+	float x = 0;
+	float y = 0;
 
-	/// Construct using coordinates.
-	b2Vec2(float xIn, float yIn) : x(xIn), y(yIn) {}
+	constexpr b2Vec2() {}
+	constexpr b2Vec2(float xIn, float yIn) : x(xIn), y(yIn) {}
+	constexpr b2Vec2(const QPointF& p) : x((float)p.x()), y((float)p.y()) {}
+	constexpr b2Vec2(const QSizeF& s) : x((float)s.width()), y((float)s.height()) {}
+	constexpr QPointF toPointF()const { return { x, y }; }
+	constexpr QSizeF toSizeF()const { return { x, y }; }
 
-	/// Set this vector to all zeros.
-	void SetZero() { x = 0.0f; y = 0.0f; }
-
-	/// Set this vector to some specified coordinates.
-	void Set(float x_, float y_) { x = x_; y = y_; }
+	constexpr void SetZero() { x = 0.0f; y = 0.0f; }
+	constexpr void Set(float x_, float y_) { x = x_; y = y_; }
 
 	/// Negate this vector.
 	b2Vec2 operator -() const { b2Vec2 v; v.Set(-x, -y); return v; }
 
 	/// Read from and indexed element.
-	float operator () (int32 i) const
-	{
+	float operator () (int32 i) const {
 		return (&x)[i];
 	}
 
 	/// Write to an indexed element.
-	float& operator () (int32 i)
-	{
+	float& operator () (int32 i) {
 		return (&x)[i];
 	}
 
 	/// Add a vector to this vector.
-	void operator += (const b2Vec2& v)
-	{
+	void operator += (const b2Vec2& v) {
 		x += v.x; y += v.y;
 	}
 
 	/// Subtract a vector from this vector.
-	void operator -= (const b2Vec2& v)
-	{
+	void operator -= (const b2Vec2& v) {
 		x -= v.x; y -= v.y;
 	}
 
 	/// Multiply this vector by a scalar.
-	void operator *= (float a)
-	{
+	void operator *= (float a) {
 		x *= a; y *= a;
+	}
+
+	b2Vec2 operator*(float v)const {
+		b2Vec2 ret = *this;
+		ret *= v;
+		return ret;
 	}
 
 	/// Get the length of this vector (the norm).
@@ -96,6 +101,25 @@ struct B2_API b2Vec2
 	float LengthSquared() const
 	{
 		return x * x + y * y;
+	}
+
+	void SetUnitFromAngle(float angle)
+	{
+		x = cos(angle);
+		y = sin(angle);
+	}
+
+	float AngleFromNormalized() const // and non-zero length
+	{
+		return atan2(y, x);
+	}
+
+	b2Vec2& AddAngleToNormalized(float a) {
+		if (std::abs(a) > b2_epsilon) {
+			float cur = AngleFromNormalized();
+			SetUnitFromAngle(cur + a);
+		}
+		return *this;
 	}
 
 	/// Convert this vector into a unit vector. Returns the length.
@@ -113,6 +137,26 @@ struct B2_API b2Vec2
 		return length;
 	}
 
+	b2Vec2 Normalized()const
+	{
+		b2Vec2 ret = *this;
+		const float len = ret.Normalize();
+		if (0 == len)
+			ret.x = ret.y = 0;
+		return ret;
+	}
+
+	b2Vec2& LimitLength(float maxLen) {
+		if (maxLen > b2_epsilon) {
+			const float len = Length();
+			if (len > maxLen)
+				*this *= maxLen / len;
+		} else {
+			Set(0, 0);
+		}
+		return *this;
+	}
+
 	/// Does this vector contain finite coordinates?
 	bool IsValid() const
 	{
@@ -124,8 +168,6 @@ struct B2_API b2Vec2
 	{
 		return b2Vec2(-y, x);
 	}
-
-	float x, y;
 };
 
 /// A 2D column vector with 3 elements.

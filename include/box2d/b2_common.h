@@ -92,7 +92,9 @@
 
 /// The maximum linear translation of a body per step. This limit is very large and is used
 /// to prevent numerical problems. You shouldn't need to adjust this. Meters.
-#define b2_maxTranslation			(2.0f * b2_lengthUnitsPerMeter)
+// Multikill extra-fast cars - under 30 FPS this gives 190 kmh max:
+//#define b2_maxTranslation			(2.0f * b2_lengthUnitsPerMeter)
+#define b2_maxTranslation			(4.0f * b2_lengthUnitsPerMeter)
 #define b2_maxTranslationSquared	(b2_maxTranslation * b2_maxTranslation)
 
 /// The maximum angular velocity of a body. This limit is very large and is used
