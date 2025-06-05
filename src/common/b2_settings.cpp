@@ -21,8 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "box2d/b2_settings.h"
 #include <stdio.h>
 #include <stdarg.h>
@@ -52,7 +50,7 @@ FILE* b2_dumpFile = nullptr;
 void b2OpenDump(const char* fileName)
 {
 	b2Assert(b2_dumpFile == nullptr);
-	b2_dumpFile = fopen(fileName, "w");
+	auto error = fopen_s(&b2_dumpFile, fileName, "w");
 }
 
 void b2Dump(const char* string, ...)
