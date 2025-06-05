@@ -7,9 +7,6 @@
 - changes are based on latest 2.x branch
 - is aimed to be included via sources. cmake files are not updated
 
-# Build Status
-[![Build Status](https://github.com/erincatto/box2d/actions/workflows/build.yml/badge.svg)](https://github.com/erincatto/box2d/actions)
-
 # Box2D 
 
 Box2D is a 2D physics engine for games.
