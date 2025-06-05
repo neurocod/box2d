@@ -1,5 +1,12 @@
 ![Box2D Logo](https://box2d.org/images/logo.svg)
 
+# Changes over original box2d
+- precompiled headers pch.h includes are added to all the implementation files except platform-specific timer
+- QPoint/QSize conversion added to b2Vec
+- some minor funcions lice advanced angle normalization etc
+- changes are based on latest 2.x branch
+- is aimed to be included via sources. cmake files are not updated
+
 # Build Status
 [![Build Status](https://github.com/erincatto/box2d/actions/workflows/build.yml/badge.svg)](https://github.com/erincatto/box2d/actions)
 
