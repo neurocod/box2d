@@ -57,6 +57,13 @@ public:
 	/// @param hx the half-width.
 	/// @param hy the half-height.
 	void SetAsBox(float hx, float hy);
+	template<typename T> // T is usually a QGraphicsRectItem
+	T* SetAsBoxCreateItem(float hx, float hy, qreal k) {
+		SetAsBox(hx, hy);
+		auto ret = new T;
+		ret->setRect(-hx * k, -hy * k, 2 * hx * k, 2 * hy * k);
+		return ret;
+	}
 
 	/// Build vertices to represent an oriented box.
 	/// @param hx the half-width.
